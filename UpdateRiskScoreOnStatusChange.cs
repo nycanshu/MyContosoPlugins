@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Net.Http;
 using System.Text;
 using Microsoft.Xrm.Sdk;
@@ -28,15 +29,15 @@ namespace MyContosoPlugins
                 {
                     Entity preImage = context.PreEntityImages["PreImage"];
 
-                    // Check if the statuscode is changing
-                    if (targetEntity.Contains("statuscode"))
+                    // Check if the statuscode is changing from New to Review
+                    if (targetEntity.Contains("statuscode") && preImage.Contains("statuscode"))
                     {
                         OptionSetValue newStatusCode = (OptionSetValue)targetEntity["statuscode"];
-                        OptionSetValue oldStatusCode = preImage.Contains("statuscode") ? (OptionSetValue)preImage["statuscode"] : null;
+                        OptionSetValue oldStatusCode = (OptionSetValue)preImage["statuscode"];
 
-                        if (newStatusCode.Value == 100000001 && (oldStatusCode == null || oldStatusCode.Value != 100000001)) // Review status
+                        if (newStatusCode.Value == 100000001 && oldStatusCode.Value == 1)
                         {
-                            tracingService.Trace("Mortgage status changed to Review.");
+                            tracingService.Trace("Mortgage status changed from New to Review.");
 
                             // Ensure the mortgage has an associated contact
                             if (preImage.Contains("new_contact") && preImage["new_contact"] is EntityReference contactRef)
@@ -71,12 +72,13 @@ namespace MyContosoPlugins
                         }
                         else
                         {
-                            tracingService.Trace("Mortgage status is not set to Review or status did not change. No action taken.");
+                            tracingService.Trace("Mortgage status is not changing from New to Review. Skipping plugin execution.");
+                            return;
                         }
                     }
                     else
                     {
-                        throw new InvalidPluginExecutionException("The statuscode field is missing from the target entity.");
+                        throw new InvalidPluginExecutionException("The statuscode field is missing from the target entity or pre-image.");
                     }
                 }
                 else
