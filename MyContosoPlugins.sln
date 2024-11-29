@@ -5,6 +5,11 @@ VisualStudioVersion = 17.11.35431.28
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyContosoPlugins", "MyContosoPlugins.csproj", "{B999D8A5-99D7-4522-8055-CF188C23DDDA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client Scripts", "Client Scripts", "{477C3277-FE0E-47B7-8BAB-BC1DE63A7F1F}"
+	ProjectSection(SolutionItems) = preProject
+		filterMortgageOnUpdateCase.js = filterMortgageOnUpdateCase.js
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
