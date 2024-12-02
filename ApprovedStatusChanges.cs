@@ -29,11 +29,16 @@ namespace MyContosoPlugins
             var mortgage = (Entity)context.InputParameters["Target"];
             Entity preImage = GetPreImage(context, tracingService);
 
+            //fetch base apr and pass to calculate funciton
+            int baseApr = getBaseAprFromApi(tracingService);
+
+
             // Step 1: Calculate Final APR
-            var finalApr = CalculateFinalApr(mortgage, context, service, tracingService);
+            var finalApr = CalculateFinalApr(mortgage, baseApr, context, service, tracingService);
+
 
             // Step 2: Update Final APR in the mortgage record
-            UpdateFinalApr(mortgage, finalApr, service, tracingService);
+            UpdateFinalApr(mortgage, finalApr,baseApr, service, tracingService);
 
             // Step 3: Calculate Monthly Payment based on Final APR
             var monthlyPayment = CalculateMonthlyPayment(mortgage,preImage, finalApr, tracingService);
@@ -67,10 +72,9 @@ namespace MyContosoPlugins
             throw new InvalidPluginExecutionException("Pre-image is not available.");
         }
 
-        private decimal CalculateFinalApr(Entity mortgage, IPluginExecutionContext context, IOrganizationService service, ITracingService tracingService)
+        private decimal CalculateFinalApr(Entity mortgage, int baseApr, IPluginExecutionContext context, IOrganizationService service, ITracingService tracingService)
         {
             var preImage = GetPreImage(context, tracingService);
-            var baseApr = preImage.GetAttributeValue<int>("new_baseapr");
             var margin = 0.02M;
             var salesTax = 0.05;
 
@@ -90,6 +94,56 @@ namespace MyContosoPlugins
             tracingService.Trace($"Calculated Final APR: {finalApr}");
             return finalApr;
         }
+
+        private int getBaseAprFromApi(ITracingService tracingService)
+        {
+            try
+            {
+                // Step 1: Make an HTTP GET request to the API
+                using (var client = new System.Net.Http.HttpClient())
+                {
+                    // Set the base address for the API
+                    client.BaseAddress = new Uri("https://contosoapi-38bv.onrender.com");
+
+                    // Send the GET request to the endpoint
+                    var response = client.GetAsync("/api/getbaseapr").Result;
+
+                    // Check if the response is successful
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // Step 2: Parse the response JSON to extract the 'baseApr' value
+                        var responseData = response.Content.ReadAsStringAsync().Result;
+                        var jsonResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, int>>(responseData);
+
+                        // Extract 'baseApr' from the response
+                        if (jsonResponse != null && jsonResponse.ContainsKey("baseApr"))
+                        {
+                            int baseApr = jsonResponse["baseApr"];
+                            tracingService.Trace($"Base APR fetched from API: {baseApr}");
+                            return baseApr; // Return the base APR value from the API
+                        }
+                        else
+                        {
+                            tracingService.Trace("API response does not contain a valid baseApr value. Returning default value of 5.");
+                            return 5; // Default value in case the API response is invalid
+                        }
+                    }
+                    else
+                    {
+                        // Handle unsuccessful response
+                        tracingService.Trace($"Failed to fetch Base APR from API. Status Code: {response.StatusCode}. Returning default value of 5.");
+                        return 5; // Default value if API call fails
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                tracingService.Trace($"Exception occurred while fetching Base APR from API: {ex.Message}. Returning default value of 5.");
+                return 5; // Return default value in case of an exception
+            }
+        }
+
 
         private int GetRiskScore(Entity preImage, IOrganizationService service, ITracingService tracingService)
         {
@@ -131,9 +185,10 @@ namespace MyContosoPlugins
             return stateTaxList[state];
         }
 
-        private void UpdateFinalApr(Entity mortgage, decimal finalApr, IOrganizationService service, ITracingService tracingService)
+        private void UpdateFinalApr(Entity mortgage, decimal finalApr,int baseApr, IOrganizationService service, ITracingService tracingService)
         {
             mortgage["new_apr"] = finalApr;
+            mortgage["new_baseapr"] = baseApr;
             service.Update(mortgage);
             tracingService.Trace($"Final APR updated: {finalApr}");
         }

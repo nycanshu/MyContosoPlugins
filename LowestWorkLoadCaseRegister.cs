@@ -144,10 +144,20 @@ namespace MyContosoPlugins
 
         private void AssignCaseToUser(IOrganizationService service, ITracingService tracingService, Entity caseEntity, EntityReference lowestWorkloadUser)
         {
-            caseEntity["ownerid"] = lowestWorkloadUser;
-            service.Update(caseEntity);
+            // Create a new instance to update only specific fields
+            Entity updatedCase = new Entity(caseEntity.LogicalName)
+            {
+                Id = caseEntity.Id
+            };
+
+            // Set the fields to update
+            updatedCase["ownerid"] = lowestWorkloadUser;
+
+            // Perform the update
+            service.Update(updatedCase);
 
             tracingService.Trace("Case successfully assigned to user with ID: {0}", lowestWorkloadUser.Id);
         }
+
     }
 }
