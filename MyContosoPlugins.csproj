@@ -121,6 +121,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApprovedStatusChanges.cs" />
+    <Compile Include="Helper\ApproveStatusHelper.cs" />
+    <Compile Include="Helper\LowestWorkLoadHelper.cs" />
+    <Compile Include="Helper\UpdateRiskScoreHelper.cs" />
     <Compile Include="LowestWorkLoadCaseRegister.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UpdateRiskScoreOnStatusChange.cs" />
