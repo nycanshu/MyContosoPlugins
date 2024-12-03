@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MyContosoPlugins.Helper;
+
+
 
 namespace MyContosoPlugins
 {
@@ -30,21 +33,21 @@ namespace MyContosoPlugins
                 try
                 {
                     // Fetch active users with read/write access
-                    var users = Helper.LowestWorkLoadHelper.FetchActiveUsers(service, tracingService);
+                    var users = LowestWorkLoadHelper.FetchActiveUsers(service, tracingService);
 
                     // Calculate the user with the lowest workload
-                    var lowestWorkloadUser = Helper.LowestWorkLoadHelper.GetLowestWorkloadUser(service, tracingService, users);
+                    var lowestWorkloadUser = LowestWorkLoadHelper.GetLowestWorkloadUser(service, tracingService, users);
 
                     // If no user with the lowest workload was found, pick a random user
                     if (lowestWorkloadUser == null)
                     {
                         tracingService.Trace("No user found with the lowest workload. Assigning to a random user.");
-                        var randomUser = Helper.LowestWorkLoadHelper.GetRandomUser(users);
+                        var randomUser = LowestWorkLoadHelper.GetRandomUser(users);
                         lowestWorkloadUser = randomUser;
                     }
 
                     // Assign the case to the selected user (either the lowest workload or random)
-                    Helper.LowestWorkLoadHelper.AssignCaseToUser(service, tracingService, caseEntity, lowestWorkloadUser);
+                    LowestWorkLoadHelper.AssignCaseToUser(service, tracingService, caseEntity, lowestWorkloadUser);
                 }
                 catch (Exception ex)
                 {

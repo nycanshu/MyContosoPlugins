@@ -2,6 +2,7 @@
 using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
+using MyContosoPlugins.Helper;
 
 namespace MyContosoPlugins
 {
@@ -16,7 +17,7 @@ namespace MyContosoPlugins
 
             tracingService.Trace("Plugin execution started.");
 
-            if (!Helper.ApproveStatusHelper.IsStatusChangedFromReviewToApproved(context, tracingService))
+            if (!ApproveStatusHelper.IsStatusChangedFromReviewToApproved(context, tracingService))
             {
                 tracingService.Trace("Status is not changed to 'Approved'. Plugin execution terminated.");
                 return;
@@ -25,27 +26,27 @@ namespace MyContosoPlugins
             var mortgage = (Entity)context.InputParameters["Target"];
 
             //get pre image
-            Entity preImage = Helper.ApproveStatusHelper.GetPreImage(context, tracingService);
+            Entity preImage = ApproveStatusHelper.GetPreImage(context, tracingService);
 
             //fetch base apr and pass to calculate funciton
-            int baseApr = Helper.ApproveStatusHelper.GetBaseAprFromApi(tracingService);
+            int baseApr = ApproveStatusHelper.GetBaseAprFromApi(tracingService);
 
 
             // Step 1: Calculate Final APR
-            var finalApr = Helper.ApproveStatusHelper.CalculateFinalApr(mortgage, baseApr, context, service, tracingService);
+            var finalApr = ApproveStatusHelper.CalculateFinalApr(mortgage, baseApr, context, service, tracingService);
 
 
             // Step 2: Update Final APR in the mortgage record
-            Helper.ApproveStatusHelper.UpdateFinalApr(mortgage, finalApr,baseApr, service, tracingService);
+            ApproveStatusHelper.UpdateFinalApr(mortgage, finalApr,baseApr, service, tracingService);
 
             // Step 3: Calculate Monthly Payment based on Final APR
-            var monthlyPayment = Helper.ApproveStatusHelper.CalculateMonthlyPayment(mortgage,preImage, finalApr, tracingService);
+            var monthlyPayment = ApproveStatusHelper.CalculateMonthlyPayment(mortgage,preImage, finalApr, tracingService);
 
             // Step 4: Update Monthly Payment in the mortgage record
-            Helper.ApproveStatusHelper.UpdateMonthlyPayment(mortgage, monthlyPayment, service, tracingService);
+           ApproveStatusHelper.UpdateMonthlyPayment(mortgage, monthlyPayment, service, tracingService);
 
             //create mortgage payment
-            Helper.ApproveStatusHelper.CreateMortgagePayments(mortgage, preImage, monthlyPayment, service, tracingService);
+            ApproveStatusHelper.CreateMortgagePayments(mortgage, preImage, monthlyPayment, service, tracingService);
 
             tracingService.Trace("Plugin execution completed.");
         }

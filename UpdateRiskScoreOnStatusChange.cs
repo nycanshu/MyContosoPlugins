@@ -3,6 +3,8 @@ using System.Net.Http;
 using System.Text;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using MyContosoPlugins.Helper;
+
 
 namespace MyContosoPlugins
 {
@@ -20,17 +22,17 @@ namespace MyContosoPlugins
             try
             {
                 // Validate the target entity and pre-image
-                Entity targetEntity = Helper.UpdateRiskScoreHelper.ValidateTargetEntity(context);
+                Entity targetEntity = UpdateRiskScoreHelper.ValidateTargetEntity(context);
 
-                Entity preImage = Helper.UpdateRiskScoreHelper.ValidatePreImage(context);
+                Entity preImage = UpdateRiskScoreHelper.ValidatePreImage(context);
 
                 // Check if status changed from New to Review
-                if (Helper.UpdateRiskScoreHelper.IsStatusChangedToReview(targetEntity, preImage, tracingService))
+                if (UpdateRiskScoreHelper.IsStatusChangedToReview(targetEntity, preImage, tracingService))
                 {
                     tracingService.Trace("Mortgage status changed from New to Review.");
 
                     // Process contact risk score
-                    Helper.UpdateRiskScoreHelper.ProcessContactRiskScore(preImage, service, tracingService);
+                    UpdateRiskScoreHelper.ProcessContactRiskScore(preImage, service, tracingService);
                 }
                 else
                 {

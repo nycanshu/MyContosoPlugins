@@ -122,7 +122,11 @@
   <ItemGroup>
     <Compile Include="ApprovedStatusChanges.cs" />
     <Compile Include="Helper\ApproveStatusHelper.cs" />
+    <Compile Include="Helper\ContactHelper.cs" />
+    <Compile Include="Helper\GlobalHelper.cs" />
     <Compile Include="Helper\LowestWorkLoadHelper.cs" />
+    <Compile Include="Helper\MortgageHelper.cs" />
+    <Compile Include="Helper\StateHelper.cs" />
     <Compile Include="Helper\UpdateRiskScoreHelper.cs" />
     <Compile Include="LowestWorkLoadCaseRegister.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -104,25 +104,40 @@ namespace MyContosoPlugins.Helper
             }
         }
 
-        public static double GetSalesTax(string state, ITracingService tracingService)
+        public static double GetSalesTax(EntityReference stateReference, IOrganizationService service, ITracingService tracingService)
         {
-            var stateTaxList = new Dictionary<string, double>
-{
-    { "Alabama", 4.0 },{ "Alaska", 0.0 }, { "Arizona", 5.6 }, { "Arkansas", 6.5 },{ "California", 7.5 },
-    { "Colorado", 2.9 },{ "Connecticut", 6.35 },{ "Delaware", 0.0 },{ "District Of Columbia", 5.75 },{ "Florida", 6.0 },
-    { "Georgia", 4.0 },{ "Hawaii", 4.0 },{ "Idaho", 6.0 },{ "Illinois", 6.25 },{ "Indiana", 7.0 },{ "Iowa", 6.0 },{ "Kansas", 6.15 },
-    { "Kentucky", 6.0 },{ "Louisiana", 4.0 },{ "Maine", 5.5 },{ "Maryland", 6.0 },{ "Massachusetts", 6.25 },
-    { "Michigan", 6.0 },{ "Minnesota", 6.875 },{ "Mississippi", 7.0 },{ "Missouri", 4.225 }, { "Montana", 0.0 },{ "Nebraska", 5.5 },
-    { "Nevada", 6.85 }, { "New Hampshire", 0.0 },{ "New Jersey", 7.0 }, { "New Mexico", 5.125 }, { "New York", 4.0 },
-    { "North Carolina", 4.75 },{ "North Dakota", 5.0 },{ "Ohio", 5.75 }, { "Oklahoma", 4.5 },{ "Oregon", 0.0 },
-    { "Pennsylvania", 6.0 }, { "Rhode Island", 7.0 },{ "South Carolina", 6.0 }, { "South Dakota", 4.0 },  { "Tennessee", 7.0 },
-    { "Texas", 6.25 },  { "Utah", 5.95 }, { "Vermont", 6.0 }, { "Virginia", 5.3 }, { "Washington", 6.5 }, { "West Virginia", 6.0 },
-    { "Wisconsin", 5.0 }, { "Wyoming", 4.0 }
-};
+            if (stateReference == null)
+            {
+                tracingService.Trace("State reference is null. Returning 0.0.");
+                return 0.0;
+            }
 
-            return stateTaxList.ContainsKey(state) ? stateTaxList[state] : 0.0;
+            try
+            {
+                // Retrieve the state record from the lookup table
+                tracingService.Trace($"Retrieving sales tax for state: {stateReference.Name} with ID: {stateReference.Id}");
+                Entity stateEntity = service.Retrieve("new_statetable", stateReference.Id, new ColumnSet("new_salestax"));
+
+                if (stateEntity != null && stateEntity.Contains("new_salestax"))
+                {
+                    // Get the sales tax from the 'new_salestax' field
+                    decimal salesTax = stateEntity.GetAttributeValue<decimal>("new_salestax");
+                    tracingService.Trace($"Sales tax for state '{stateReference.Name}' is {salesTax}.");
+                    return (double)salesTax;
+                }
+                else
+                {
+                    tracingService.Trace($"Sales tax field 'new_salestax' not found for state: {stateReference.Name}. Returning 0.0.");
+                }
+            }
+            catch (Exception ex)
+            {
+                tracingService.Trace($"Error retrieving sales tax for state: {stateReference.Name}. Exception: {ex.Message}");
+            }
+
+            return 0.0;
         }
-
+     
         public static decimal CalculateFinalApr(Entity mortgage, int baseApr, IPluginExecutionContext context, IOrganizationService service, ITracingService tracingService)
         {
             var preImage = GetPreImage(context, tracingService);
